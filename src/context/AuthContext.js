@@ -1,52 +1,48 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { firebaseAuth } from '../services/firebaseAuth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = firebaseAuth.onAuthStateChange((user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  const register = async (email, password, displayName) => {
-    const result = await firebaseAuth.register(email, password, displayName);
-    return result;
-  };
-
+  // Mock login function for testing
   const login = async (email, password) => {
-    const result = await firebaseAuth.login(email, password);
-    return result;
+    console.log('Login attempted:', email);
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockUser = { email, uid: '123' };
+        setCurrentUser(mockUser);
+        resolve(mockUser);
+      }, 1000);
+    });
   };
 
-  const logout = async () => {
-    const result = await firebaseAuth.logout();
-    setUser(null);
-    return result;
+  const logout = () => {
+    setCurrentUser(null);
   };
 
   const value = {
-    user,
-    register,
+    currentUser,
     login,
     logout,
-    loading
+    loading: false
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export default AuthContext;
