@@ -3,7 +3,7 @@ import './App.css';
 import AddDealForm from './components/Admin/AddDealForm';
 import NewsletterManager from './components/Admin/NewsletterManager';
 import { googleSheetsAPI } from './services/googleSheets';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './context/AuthContext';
 
 function AdminApp() {
   const [deals, setDeals] = useState([]);
