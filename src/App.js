@@ -1,23 +1,162 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import Header from './components/Layout/Header';
+import Navigation from './components/Layout/Navigation';
+import HeroSection from './components/UI/HeroSection';
+import DealsGrid from './components/Deals/DealsGrid';
+import Newsletter from './components/UI/Newsletter';
+import Footer from './components/Layout/Footer';
+import ApiStatus from './components/UI/ApiStatus';
+import { googleSheetsAPI } from './services/googleSheets';
 
 function App() {
+  const [deals, setDeals] = useState([]);
+  const [filteredDeals, setFilteredDeals] = useState([]);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Load deals on component mount
+  useEffect(() => {
+    loadDeals();
+  }, []);
+
+  // Filter deals when category or search term changes
+  useEffect(() => {
+    filterDeals();
+  }, [deals, activeCategory, searchTerm]);
+
+  const loadDeals = async () => {
+    try {
+      setLoading(true);
+      const dealsData = await googleSheetsAPI.getDeals();
+      setDeals(dealsData);
+    } catch (error) {
+      console.error('Error loading deals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterDeals = () => {
+    let filtered = deals;
+
+    // Apply category filter
+    if (activeCategory !== 'all') {
+      filtered = filtered.filter(deal => 
+        deal.category && deal.category.toLowerCase() === activeCategory.toLowerCase()
+      );
+    }
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(deal =>
+        (deal.title && deal.title.toLowerCase().includes(searchLower)) ||
+        (deal.store && deal.store.toLowerCase().includes(searchLower)) ||
+        (deal.category && deal.category.toLowerCase().includes(searchLower))
+      );
+    }
+
+    setFilteredDeals(filtered);
+  };
+
+  const handleCategoryChange = (category) => {
+    setActiveCategory(category);
+    setSearchTerm(''); // Clear search when changing category
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    setActiveCategory('all'); // Clear category when searching
+  };
+
+  const handleNewsletterSubscribe = async (email) => {
+    const result = await googleSheetsAPI.subscribeNewsletter(email);
+    if (result.success) {
+      alert('Thank you for subscribing! You will receive daily deal alerts.');
+    } else {
+      alert('Subscription failed. Please try again.');
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading amazing deals from Sri Lankan stores...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
+      {/* Header with language selector and search */}
+      <Header 
+        currentLanguage={currentLanguage} 
+        setCurrentLanguage={setCurrentLanguage}
+        onSearch={handleSearch}
+        searchTerm={searchTerm}
+      />
+
+      {/* Navigation with category filters */}
+      <Navigation 
+        onCategoryChange={handleCategoryChange} 
+        activeCategory={activeCategory}
+      />
+
+      {/* Hero Section */}
+      <HeroSection />
+
+      {/* Main Content */}
+      <div className="container">
+        {/* API Connection Status */}
+        <ApiStatus />
+
+        {/* Search and Category Info */}
+        <div className="content-header">
+          <div className="category-info">
+            <h2>
+              {searchTerm ? (
+                <>Search Results for "{searchTerm}"</>
+              ) : (
+                <>
+                  {activeCategory === 'all' ? 'All Hot Deals' : 
+                  `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} Deals`}
+                </>
+              )}
+              <span className="deals-count"> ({filteredDeals.length} deals)</span>
+            </h2>
+            {searchTerm && (
+              <button 
+                className="clear-search-btn"
+                onClick={() => handleSearch('')}
+              >
+                <i className="fas fa-times"></i>
+                Clear Search
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Deals Grid */}
+        <DealsGrid deals={filteredDeals} />
+
+        {/* Newsletter */}
+        <Newsletter onSubscribe={handleNewsletterSubscribe} />
+      </div>
+
+      {/* Footer */}
+      <Footer />
+
+      {/* Hidden Admin Access - Only visible if you know the secret */}
+      <div className="hidden-admin-access">
+        <a href="/admin" className="admin-link">
+          <i className="fas fa-cog"></i>
         </a>
-      </header>
+      </div>
     </div>
   );
 }
