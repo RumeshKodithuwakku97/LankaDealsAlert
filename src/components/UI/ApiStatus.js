@@ -11,33 +11,47 @@ const ApiStatus = () => {
 
   const checkApiStatus = async () => {
     try {
+      setApiStatus('checking');
       const deals = await googleSheetsAPI.getDeals();
-      setApiStatus('connected');
-      setDealsCount(deals.length);
+      
+      if (deals && deals.length > 0) {
+        setApiStatus('connected');
+        setDealsCount(deals.length);
+      } else {
+        setApiStatus('no-data');
+      }
     } catch (error) {
       setApiStatus('error');
     }
   };
 
+  const getStatusMessage = () => {
+    switch (apiStatus) {
+      case 'connected':
+        return `✅ Connected to Google Sheets • ${dealsCount} deals loaded`;
+      case 'checking':
+        return '🔄 Connecting to Google Sheets...';
+      case 'error':
+        return '❌ Connection failed • Using sample data';
+      case 'no-data':
+        return '⚠️ Connected but no deals found';
+      default:
+        return 'Checking connection...';
+    }
+  };
+
   return (
     <div className={`api-status ${apiStatus}`}>
-      <div className="status-indicator">
-        <i className={`fas ${
-          apiStatus === 'connected' ? 'fa-check-circle' : 
-          apiStatus === 'error' ? 'fa-exclamation-triangle' : 'fa-sync fa-spin'
-        }`}></i>
-        Google Sheets API: {apiStatus.toUpperCase()}
+      <div className="status-content">
+        <span className="status-message">{getStatusMessage()}</span>
+        <button 
+          className="refresh-btn"
+          onClick={checkApiStatus}
+          title="Refresh connection"
+        >
+          <i className="fas fa-sync-alt"></i>
+        </button>
       </div>
-      {apiStatus === 'connected' && (
-        <div className="deals-count">
-          {dealsCount} deals loaded from Google Sheets
-        </div>
-      )}
-      {apiStatus === 'error' && (
-        <div className="error-info">
-          Using fallback data. Check your API URL and CORS settings.
-        </div>
-      )}
     </div>
   );
 };

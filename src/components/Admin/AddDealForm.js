@@ -15,16 +15,19 @@ const AddDealForm = ({ onDealAdded }) => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setMessage('');
 
     try {
       const result = await googleSheetsAPI.addDeal(formData);
       
       if (result.success) {
-        alert('Deal added successfully!');
+        setMessage('✅ Deal added successfully!');
+        // Reset form
         setFormData({
           title: '',
           store: '',
@@ -38,10 +41,10 @@ const AddDealForm = ({ onDealAdded }) => {
         });
         if (onDealAdded) onDealAdded();
       } else {
-        alert('Error adding deal: ' + result.error);
+        setMessage(`❌ Error: ${result.error || 'Failed to add deal'}`);
       }
     } catch (error) {
-      alert('Error adding deal: ' + error.message);
+      setMessage(`❌ Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -57,12 +60,20 @@ const AddDealForm = ({ onDealAdded }) => {
   return (
     <div className="admin-panel">
       <h3>Add New Deal</h3>
+      
+      {message && (
+        <div className={`form-message ${message.includes('✅') ? 'success' : 'error'}`}>
+          {message}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="deal-form">
         <div className="form-group">
+          <label>Deal Title *</label>
           <input
             type="text"
             name="title"
-            placeholder="Deal Title"
+            placeholder="Samsung Galaxy S24 Ultra 5G"
             value={formData.title}
             onChange={handleChange}
             required
@@ -70,10 +81,11 @@ const AddDealForm = ({ onDealAdded }) => {
         </div>
         
         <div className="form-group">
+          <label>Store Name *</label>
           <input
             type="text"
             name="store"
-            placeholder="Store Name"
+            placeholder="Daraz.lk"
             value={formData.store}
             onChange={handleChange}
             required
@@ -82,30 +94,33 @@ const AddDealForm = ({ onDealAdded }) => {
 
         <div className="form-row">
           <div className="form-group">
+            <label>Current Price *</label>
             <input
               type="text"
               name="currentPrice"
-              placeholder="Current Price (Rs. 12,999)"
+              placeholder="Rs. 287,500"
               value={formData.currentPrice}
               onChange={handleChange}
               required
             />
           </div>
           <div className="form-group">
+            <label>Original Price *</label>
             <input
               type="text"
               name="originalPrice"
-              placeholder="Original Price (Rs. 18,500)"
+              placeholder="Rs. 359,999"
               value={formData.originalPrice}
               onChange={handleChange}
               required
             />
           </div>
           <div className="form-group">
+            <label>Discount *</label>
             <input
               type="text"
               name="discount"
-              placeholder="Discount (20% OFF)"
+              placeholder="20% OFF"
               value={formData.discount}
               onChange={handleChange}
               required
@@ -114,10 +129,11 @@ const AddDealForm = ({ onDealAdded }) => {
         </div>
 
         <div className="form-group">
+          <label>Image URL *</label>
           <input
             type="url"
             name="image"
-            placeholder="Image URL"
+            placeholder="https://images.unsplash.com/photo-..."
             value={formData.image}
             onChange={handleChange}
             required
@@ -126,6 +142,7 @@ const AddDealForm = ({ onDealAdded }) => {
 
         <div className="form-row">
           <div className="form-group">
+            <label>Category *</label>
             <select
               name="category"
               value={formData.category}
@@ -142,10 +159,11 @@ const AddDealForm = ({ onDealAdded }) => {
             </select>
           </div>
           <div className="form-group">
+            <label>Expiry *</label>
             <input
               type="text"
               name="expiry"
-              placeholder="Expiry (5 days left)"
+              placeholder="5 days left"
               value={formData.expiry}
               onChange={handleChange}
               required
@@ -154,18 +172,33 @@ const AddDealForm = ({ onDealAdded }) => {
         </div>
 
         <div className="form-group">
+          <label>Affiliate URL *</label>
           <input
             type="url"
             name="affiliateUrl"
-            placeholder="Affiliate URL"
+            placeholder="https://daraz.lk/product-link"
             value={formData.affiliateUrl}
             onChange={handleChange}
             required
           />
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="submit-btn">
-          {isSubmitting ? 'Adding Deal...' : 'Add Deal'}
+        <button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className="submit-btn"
+        >
+          {isSubmitting ? (
+            <>
+              <i className="fas fa-spinner fa-spin"></i>
+              Adding Deal...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-plus"></i>
+              Add Deal
+            </>
+          )}
         </button>
       </form>
     </div>

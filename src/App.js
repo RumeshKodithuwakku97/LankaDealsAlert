@@ -8,6 +8,7 @@ import Newsletter from './components/UI/Newsletter';
 import Footer from './components/Layout/Footer';
 import ApiStatus from './components/UI/ApiStatus';
 import { googleSheetsAPI } from './services/googleSheets';
+import { useAuth } from './context/AuthContext';
 
 function App() {
   const [deals, setDeals] = useState([]);
@@ -16,6 +17,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const { user, login, logout, register } = useAuth();
 
   // Load deals on component mount
   useEffect(() => {
@@ -64,12 +67,12 @@ function App() {
 
   const handleCategoryChange = (category) => {
     setActiveCategory(category);
-    setSearchTerm(''); // Clear search when changing category
+    setSearchTerm('');
   };
 
   const handleSearch = (term) => {
     setSearchTerm(term);
-    setActiveCategory('all'); // Clear category when searching
+    setActiveCategory('all');
   };
 
   const handleNewsletterSubscribe = async (email) => {
@@ -79,6 +82,20 @@ function App() {
     } else {
       alert('Subscription failed. Please try again.');
     }
+  };
+
+  const handleLogin = async (email, password) => {
+    const result = await login(email, password);
+    return result;
+  };
+
+  const handleSignup = async (email, password, displayName) => {
+    const result = await register(email, password, displayName);
+    return result;
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   // Loading state
@@ -93,12 +110,16 @@ function App() {
 
   return (
     <div className="App">
-      {/* Header with language selector and search */}
+      {/* Header with authentication */}
       <Header 
         currentLanguage={currentLanguage} 
         setCurrentLanguage={setCurrentLanguage}
         onSearch={handleSearch}
         searchTerm={searchTerm}
+        onLogin={handleLogin}
+        onSignup={handleSignup}
+        onLogout={handleLogout}
+        user={user}
       />
 
       {/* Navigation with category filters */}
@@ -114,6 +135,14 @@ function App() {
       <div className="container">
         {/* API Connection Status */}
         <ApiStatus />
+
+        {/* User Welcome Message */}
+        {user && (
+          <div className="user-welcome">
+            <i className="fas fa-user-check"></i>
+            Welcome back, {user.displayName || user.email}!
+          </div>
+        )}
 
         {/* Search and Category Info */}
         <div className="content-header">
@@ -151,12 +180,14 @@ function App() {
       {/* Footer */}
       <Footer />
 
-      {/* Hidden Admin Access - Only visible if you know the secret */}
-      <div className="hidden-admin-access">
-        <a href="/admin" className="admin-link">
-          <i className="fas fa-cog"></i>
-        </a>
-      </div>
+      {/* Hidden Admin Access - Only for authenticated users */}
+      {user && (
+        <div className="hidden-admin-access">
+          <a href="/admin" className="admin-link">
+            <i className="fas fa-cog"></i>
+          </a>
+        </div>
+      )}
     </div>
   );
 }
