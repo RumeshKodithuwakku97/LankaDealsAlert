@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Header from './components/Layout/Header';
 import Navigation from './components/Layout/Navigation';
@@ -23,23 +23,7 @@ function App() {
   }, []);
 
   // Filter deals when category or search term changes
-  useEffect(() => {
-    filterDeals();
-  }, [deals, activeCategory, searchTerm]);
-
-  const loadDeals = async () => {
-    try {
-      setLoading(true);
-      const dealsData = await googleSheetsAPI.getDeals();
-      setDeals(dealsData);
-    } catch (error) {
-      console.error('Error loading deals:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterDeals = () => {
+  const filterDeals = useCallback(() => {
     let filtered = deals;
 
     // Apply category filter
@@ -60,6 +44,22 @@ function App() {
     }
 
     setFilteredDeals(filtered);
+  }, [deals, activeCategory, searchTerm]);
+
+  useEffect(() => {
+    filterDeals();
+  }, [filterDeals]);
+
+  const loadDeals = async () => {
+    try {
+      setLoading(true);
+      const dealsData = await googleSheetsAPI.getDeals();
+      setDeals(dealsData);
+    } catch (error) {
+      console.error('Error loading deals:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategoryChange = (category) => {

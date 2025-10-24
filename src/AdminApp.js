@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import AddDealForm from './components/Admin/AddDealForm';
 import { googleSheetsAPI } from './services/googleSheets';
@@ -12,11 +12,7 @@ function AdminApp() {
     categories: {}
   });
 
-  useEffect(() => {
-    loadDeals();
-  }, []);
-
-  const loadDeals = async () => {
+  const loadDeals = useCallback(async () => {
     try {
       setLoading(true);
       const dealsData = await googleSheetsAPI.getDeals();
@@ -27,7 +23,11 @@ function AdminApp() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDeals();
+  }, [loadDeals]);
 
   const calculateStats = (dealsData) => {
     const categories = {};
@@ -92,19 +92,6 @@ function AdminApp() {
           <div className="stat-card">
             <div className="stat-number">{Object.keys(stats.categories).length}</div>
             <div className="stat-label">Categories</div>
-          </div>
-        </div>
-
-        {/* Category Breakdown */}
-        <div className="category-stats">
-          <h3>Deals by Category</h3>
-          <div className="category-list">
-            {Object.entries(stats.categories).map(([category, count]) => (
-              <div key={category} className="category-stat">
-                <span className="category-name">{category}</span>
-                <span className="category-count">{count} deals</span>
-              </div>
-            ))}
           </div>
         </div>
 

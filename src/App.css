@@ -1031,3 +1031,25 @@ body {
 .login-btn:hover {
   background: var(--primary-dark);
 }
+/* Footer Link Buttons */
+.footer-link {
+  background: none;
+  border: none;
+  color: #cbd5e0;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: left;
+  width: 100%;
+  padding: 0;
+}
+
+.footer-link:hover {
+  color: var(--primary-color);
+  transform: translateX(5px);
+}
